@@ -15,7 +15,7 @@ void fill(int x, int y, char color, char **img);//query5
 int main() {
 	int query, n_query, testcase, height, width;
 	int long_height;
-	int angle = NULL, flag = NULL, arg = NULL;
+    int angle, flag, arg;
 	int x1, x2, y1, y2, c_h, c_w, i;
 	char **img, *temp, color;
 
@@ -30,17 +30,29 @@ int main() {
 				printf("Input query : ");
 				scanf("%d", &query);
 				switch(query) {		
-					case 1 : img = resize(arg, &height, &width, img);
-						 break;
-					case 2 : img = rotate(&height, &width, angle, img);
-						 break;	
-					case 3 : flip(height, width, flag, img);
-						 break;
+					case 1 : printf("\nResize\n");
+                             printf("Input 0 or 1 : ");
+                             scanf("%d", &arg);
+                             img = resize(arg, &height, &width, img);
+					    	 break;
+					case 2 : printf("\nRotate\n");
+                             printf("Input 0 or 1 or 2 : ");
+                        	 scanf("%d", &angle);
+                             img = rotate(&height, &width, angle, img);
+				    		 break;	
+					case 3 : printf("\nFlip\n");
+                             printf("Input 0 or 1 : ");
+                        	 scanf("%d", &flag);
+                             flip(height, width, flag, img);
+					    	 break;
+                    case 4 : printf("\nCopy and Paste\n");
+                             printf("x1, y1, c_h, c_w, x2, y2 : ");
+                             scanf("%d %d %d %d %d %d", &x1, &y1, &c_h, &c_w, &x2, &y2);
+                             temp = copy(x1, y1, c_h, c_w, height, width, img);
+			    			 paste(x2, y2, height, width, img, temp);
+				    		 break;
 				/*
-					case 4 : temp = copy(x1, y1, c_h, c_w, height, width, img);
-						 paste(x2, y2, height, width, img, temp);
-						 break;
-					case 5 : fill(x1, y1, color, img);
+                    case 5 : fill(x1, y1, color, img);
 						 break;
 				 */
 					default : printf("Error\n");
@@ -67,7 +79,6 @@ char **input(int *height, int *width, int *n_query) {
 		printf("Size Error\n");
 		return NULL;
 	}
-
 
 	img = (char**)malloc(*height * sizeof(char*));
 	for (i = 0; i < *height; i++)
@@ -111,10 +122,6 @@ char **resize(int arg1, int *height, int *width, char **img) {
 	for(i = 0; i < h; i++)
 		for(j = 0; j < *width + 1; j++)
 			temp_img[i][j] = img[i][j];
-
-	printf("\nResize\n");
-	printf("Input 0 or 1 : ");
-	scanf("%d", &arg1);
 
 	if(arg1 == 0){
 		if(*height * 2 > 4096 || *width * 2 > 4096) {
@@ -186,12 +193,11 @@ char **resize(int arg1, int *height, int *width, char **img) {
 	free(temp_img);
 
 	if(flag == 0) return img;
-	else if(flag == 1)return final_img;
+	return final_img;
 }
 char **rotate(int *height, int *width, int angle, char **img){
-	int temp = 0, h;
-	int i = 0, j = 0, t_j = 1
-        ;
+	int h;
+	int i = 0, j = 0;
     if(*height > *width) h = *height;
     else h = *width;
 
@@ -202,9 +208,6 @@ char **rotate(int *height, int *width, int angle, char **img){
 		for(j = 0; j < *width + 1; j++)
 			temp_img[i][j] = img[i][j];
 
-	printf("\nRotate\n");
-	printf("Input 0 or 1 or 2 : ");
-	scanf("%d", &angle);
 	if(angle != 0 && angle != 1 && angle != 2) {
 		printf("Error\n");
 		for(i = 0; i < h; i++)
@@ -254,10 +257,7 @@ void flip(int height, int width, int flag, char **img){
 	
 	for(i = 0; i < height; i++)
 		for(j = 0; j < width + 1; j++)
-			temp_img[i][j] = img[i][j];//copy prigin img to tmp
-	printf("\nFlip\n");
-	printf("Input 0 or 1 : ");
-	scanf("%d", &flag);
+			temp_img[i][j] = img[i][j];//copy origin img to tmp_img
 
 	if(flag == 0){
 		for(i = 0; i < height; i++)
@@ -279,8 +279,78 @@ void flip(int height, int width, int flag, char **img){
 	for(i = 0; i < height; i++)
 		free(*(temp_img + i));
 	free(temp_img);//free temp
-	
-	return img;
 }
 
+char *copy(int x1, int y1, int c_h, int c_w, int height, int width, char **img){
+    int i, j, flag = 1;
+    int h, w, t = 0;
+    char *temp;
+    
+    if(0 <= x1 && x1 < height && 0 <= y1 && y1 < width) flag = 1;
+	else flag = 0;
 
+
+    if(c_h <= 0 || c_w <= 0 || c_h > 4096 || c_w > 4096)
+        flag = 0;
+    
+    if(flag == 0){
+        printf("Error\n");
+        return NULL;
+    }
+
+    else if(flag == 1){
+        h = x1 + c_h;
+        w = y1 + c_w;
+
+        if(h > height)
+            h = height;
+        if(w > width)
+            w = width;
+
+        temp = (char*)malloc(((h * (w + 1)) + 1) * sizeof(char));
+
+        for(i = x1; i < h; i++){
+            for(j = y1; j < w; j++){
+                temp[t] = img[i][j];
+                t++;
+            }
+            temp[t] = '\n';
+            t++;
+        }
+        temp[t] = '\0';
+    }
+    return temp;
+} 
+
+void paste(int x2, int y2, int height, int width, char **img, char *temp){
+    int i, j, t = 0, flag = 1;
+
+    if(temp == NULL) return;
+	if (0 <= x2 && x2 < height && 0 <= y2 && y2 < width) flag = 1;
+	else flag = 0;
+
+	if (flag == 0) {
+		printf("Error\n");
+		free(temp);
+		return;
+	}
+	else if (flag == 1) {
+		for (i = x2; i < height; i++) {
+			for (j = y2; j < width; j++) {
+				if (temp[t] == '\n') break;
+				img[i][j] = temp[t];
+				t++;
+			}
+			if (temp[t] != '\n') {
+				while (1) {
+					if (temp[t] == '\n') break;
+					t++;
+				}
+			}
+			t++;
+			if (temp[t] == '\0') break;
+		}
+		print_img(height, img);
+		free(temp);
+	}
+}
