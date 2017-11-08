@@ -2,14 +2,31 @@
 #include <stdlib.h>
 
 char **input(int *height, int *width, int *n_query);
+/*inputs height, width, and number of query*/
+
 void print_img(int height, char **img);
-void swap(int *a, int *b);
+/*print img*/
+
 char **resize(int arg1, int *height, int *width, char **img);//query1
+/*if arg1 is 0, it doubles the img.
+ *if arg1 is 1, it divides the height and width of img as 2*/
+
 char **rotate(int *height, int *width, int angle, char **img);//query2
+/*this function rotates the img.
+ *when the angle input case is 0, it turns 90 degrees. in case 1 it turns 180 degrees. in case 2 it turns 270 degrees*/
+
 void flip(int height, int width, int flag, char **img);//query3
+/*this function flips the img upside down of left to right*/
+
 char *copy(int x1, int y1, int c_h, int c_w, int height, int width, char **img);
+/*this fuction copies the selected area*/
+
 void paste(int x2, int y2, int height, int width, char **img, char *temp);//query4
+/*this fuction paste the copied img to origin img*/
+
 void fill(int y, int x, char color, char **img, int height, int width, int *count);//query5
+/*this function changes the selected pixel and the pixels that have same color.
+ * The changed pixels must be connect to the selected pixel*/
 
 int main() {
 	int query, n_query, testcase, height, width;
@@ -19,33 +36,38 @@ int main() {
 
 	printf("Input testcase : ");
 	scanf("%d", &testcase);
+    /*gets the number of testcase*/
 
 	while(testcase--) {
 		img = input(&height, &width, &n_query);
-		
+		/*input the img and if the img is NULL the testcase ends 
+         * and start the new testcase if the number of times are left*/
         if(img != NULL){ 
 			while(n_query--){
 				printf("Input query : ");
 				scanf("%d", &query);
-				
+				/*input the value of query*/
                 switch(query) {		
 					case 1 : printf("\nResize\n");
                              printf("Input 0 or 1 : ");
                              scanf("%d", &arg);
                              img = resize(arg, &height, &width, img);
 					    	 break;
-					
+					/*if query = 1, resize the image*/
+
                     case 2 : printf("\nRotate\n");
                              printf("Input 0 or 1 or 2 : ");
                         	 scanf("%d", &angle);
                              img = rotate(&height, &width, angle, img);
 				    		 break;	
+					/*if query = 2, rotate the image*/
 					
                     case 3 : printf("\nFlip\n");
                              printf("Input 0 or 1 : ");
                         	 scanf("%d", &flag);
                              flip(height, width, flag, img);
 					    	 break;
+					/*if query = 3, flip the image*/
                     
                     case 4 : printf("\nCopy and Paste\n");
                              printf("x1, y1, c_h, c_w, x2, y2 : ");
@@ -53,6 +75,7 @@ int main() {
                              temp = copy(x1, y1, c_h, c_w, height, width, img);
 			    			 paste(x2, y2, height, width, img, temp);
 				    		 break;
+					/*if query = 4, copy and paste the image*/
                     
                     case 5 : count = 0;
                              printf("\nFill\n");
@@ -61,12 +84,15 @@ int main() {
                              fill(y1, x1, color, img, height, width, &count);
                              printf("Number of colored pixels = %d\n", count);
 						     break;
+					/*if query = 5, fill the img with new color*/
 					
                     default : printf("Error\n");
+					/*if query the query doesn't apply to all above, print error and get a new query*/
 				}
                 
                 print_img(height, img);
 				printf("\n");
+                /*print result img*/
 			}
             for(i = 0; i < height; i++)
 			        free(*(img + i));
@@ -83,10 +109,11 @@ char **input(int *height, int *width, int *n_query) {
 	printf("Input height, width : ");
 	scanf("%d %d", height, width);
     scanf("%c", &temp);
-	if(*height > 4096 || *width > 4096) {
+	if(*height > 4096 || *width > 4096 || *height <= 0 || *width <= 0) {
 		printf("Size Error\n");
 		return NULL;
 	}
+    /*if the height or width excess 4096 print size error and end the fuction*/
 
     img = (char**)malloc(*height * sizeof(char*));
     for (i = 0; i < *height; i++)
@@ -96,12 +123,14 @@ char **input(int *height, int *width, int *n_query) {
     for(i = 0; i < *height; i++){
         for(j = 0; j < *width + 1; j++){
             scanf("%c", &img[i][j]);
-            if(img[i][j] == ' ' || img[i][j] == '\t') j--;
+            if(img[i][j] == ' ' || img[i][j] == '\t') j--; /*if the img gets space or tab, ignore it*/
             if(img[i][j] == '\n' && j != *width){
                 printf("Error\n");
                 for(i = 0; i < *height; i++)
                     free(*(img + i));
                 free(img);
+                /*if the img gets the number of pixel less than setted height or width,
+                 * print error and end the testcase*/
 
                 return NULL;
             }
@@ -111,23 +140,29 @@ char **input(int *height, int *width, int *n_query) {
             for(i = 0; i < *height; i++)
                 free(*(img + i));
             free(img);
-
+            /*if the img gets the excessive amount of pixels than width, print
+             * error and end the test case*/
             return NULL;
         }
     }
+    
     for(i = 0; i < *height; i++)
         img[i][*width] = '\0';
-    /*	for(i = 0; i < *height; i++){
-		scanf("%s", *(img + i));
-		if(img[i][*width] != '\0'){
-			printf("Error\n");
-			return NULL;
-		}
-	}*/
-	
+ 	/*put the \0 in the last pixel of each line because the result img will be
+     * printed it string*/
+    
     printf("Input number of query : ");
 	scanf("%d", n_query);
-	
+    if(*n_query < 0) {
+        printf("Error\n");
+        for(i = 0; i < *height; i++)
+                free(*(img + i));
+        free(img);
+
+        return NULL;
+    }
+	/*if the number of query is negative number, it prints the error and wil end
+     * the test case*/
 	return img;
 }
 
@@ -138,14 +173,7 @@ void print_img(int height, char **img){
 	for(i = 0; i < height; i++)
 		printf("%s\n", *(img + i));
 }
-
-void swap(int *a, int *b){
-    int temp;
-    
-    temp = *a;
-    *a = *b;
-    *b = temp;
-}
+/*prints the result img as string*/
 
 char **resize(int arg1, int *height, int *width, char **img) {
 	int i = 0, j = 0, temp_i = 0, temp_j = 0;
@@ -158,16 +186,19 @@ char **resize(int arg1, int *height, int *width, char **img) {
 	
     for(i = 0; i < *height; i++)
 		for(j = 0; j < *width + 1; j++)
-			temp_img[i][j] = img[i][j];//copy img to temp_img
+			temp_img[i][j] = img[i][j];
+    /*copy img to temp_img*/
 
 	if(arg1 == 0){
 		if(*height * 2 > 4096 || *width * 2 > 4096) {
 			printf("Size Error\n");
 			flag = 0;
-		}// if length excess 4096 print error
+		}
+        /* if change length excess 4096 print error*/
 		if(flag == 1){
 			*height *=2;
-			*width *=2;       // double the length
+			*width *=2;       
+            /* double the length*/
 	
 			final_img = (char**)malloc(*height * sizeof(char*));
 			for(i = 0; i < *height; i++)
@@ -182,7 +213,8 @@ char **resize(int arg1, int *height, int *width, char **img) {
 					final_img[i+1][j] = temp_img[temp_i][temp_j];
 				}
 				i++;
-			}// fill the fianl_img
+			}
+            /* fill the final_img*/
 			for(i = 0; i < *height; i++)
 				final_img[i][*width] = '\0';// to print as string
 		}
@@ -192,11 +224,13 @@ char **resize(int arg1, int *height, int *width, char **img) {
 		if(*height / 2 < 1 || *width / 2 < 1) {
 			printf("Size Error\n");
 			flag = 0;
-		}// if length excess 4096 print error
+		}
+        /* if length of changed height or width is less than 1 print error*/
 		
         if(flag == 1){
 			*height /=2;
-			*width /=2;       // divide the length as 2
+			*width /=2;       
+            /*divide the length as 2*/
 	
 			final_img = (char**)malloc(*height * sizeof(char*));
 			for(i = 0; i < *height; i++)
@@ -208,16 +242,18 @@ char **resize(int arg1, int *height, int *width, char **img) {
 					temp_j++;
 				}
 				temp_i++;
-			}// in the final img put the average of origin img
+			}
+            /* in the final img put the average of origin img*/
 		
-            for(i = 0; i < h; i++)
+            for(i = 0; i < *height; i++)
 			    final_img[i][*width] = '\0';
 		}
 	}
-	else{
+	else if(arg1 != 0 && arg1 != 1){
 		printf("Error\n");
 		flag = 0;
-	}// print error of arg1
+	}
+    /* print error when it gets unappropriate arg1*/
 	
     if(flag == 1){
 		printf("Result, resize height : %d, width : %d :\n", *height, *width);
@@ -225,7 +261,8 @@ char **resize(int arg1, int *height, int *width, char **img) {
 			free(*(img + i));
 		free(img);
 	}
-	
+	/*print the altered height and width*/
+
     for(i = 0; i < h; i++)
 		free(*(temp_img + i));
 	free(temp_img);
@@ -234,15 +271,17 @@ char **resize(int arg1, int *height, int *width, char **img) {
 	return final_img;
 }
 char **rotate(int *height, int *width, int angle, char **img){
-	int new_height, new_width, tmp_h;
+	int new_height, new_width, min_h;
 	int i = 0, j = 0;
-	
+	int temp;
+
     char **temp_img = (char**)malloc(*height * sizeof(char*));
 	for(i = 0; i < *height; i++)
 		*(temp_img + i) = (char*)malloc((*width + 1) * sizeof(char));
 	for(i = 0; i < *height; i++)
 		for(j = 0; j < *width + 1; j++)
 			temp_img[i][j] = img[i][j];
+    /*copy the origin img to temp_img*/
 
 	if(angle != 0 && angle != 1 && angle != 2) {
 		printf("Error\n");
@@ -251,6 +290,8 @@ char **rotate(int *height, int *width, int angle, char **img){
 		free(temp_img);
 		return img;
 	}
+    /*if the angle is not the appropriate case, print error and end the
+     * function*/
 
 	angle++;
 
@@ -258,17 +299,17 @@ char **rotate(int *height, int *width, int angle, char **img){
         new_height = *width;
         new_width = *height;
         
+        if(new_height > *height) min_h = *height;
+        else min_h = new_height;
+        
         for(i = new_height; i < *height; i++)
             free(img[i]);
 		img = (char**)realloc(img, new_height * sizeof(char*));
-        
-        if(new_height > *height) tmp_h = *height;
-        else tmp_h = new_height;
-		
-        for(i = 0; i < tmp_h; i++)
+        for(i = 0; i < min_h; i++)
 			*(img + i) = (char*)realloc(*(img + i), (new_width + 1) * sizeof(char));
-		for (i = tmp_h; i < new_height; i++)
+		for (i = min_h; i < new_height; i++)
 			*(img + i) = (char*)malloc((new_width + 1) * sizeof(char));
+
 		for(i = 0; i < new_height; i++)
 			for(j = 0; j < new_width; j++)
 				img[i][j] = temp_img[new_width - 1 - j][i];
@@ -276,22 +317,27 @@ char **rotate(int *height, int *width, int angle, char **img){
         for(i = 0; i < new_height; i++)
             img[i][new_width] = '\0';
 		
-        swap(height, width);
-		
+
+        /*if the number of rotation is left, copy the rotated img to the temp*/
         if(angle != 0){
 			for (i = new_height; i < *height; i++)
 				free(temp_img[i]);
 			temp_img = (char**)realloc(temp_img, new_height * sizeof(char*));
-            for (i = 0; i < tmp_h; i++)
+            for (i = 0; i < min_h; i++)
 				*(temp_img + i) = (char*)realloc(*(temp_img + i), (new_width + 1) * sizeof(char));
-			for (i = tmp_h; i < new_height; i++)
+			for (i = min_h; i < new_height; i++)
 				*(temp_img + i) = (char*)malloc((new_width + 1) * sizeof(char));
-			for(i = 0; i < *height; i++)
-				for(j = 0; j < *width; j++)
+			for(i = 0; i < new_height; i++)
+				for(j = 0; j < new_width; j++)
 					temp_img[i][j] = img[i][j];
-            for(i = 0; i < *height; i++)
-                temp_img[i][*width] = '\0';
+            for(i = 0; i < new_height; i++)
+                temp_img[i][new_width] = '\0';
 		}
+
+        temp = *height;
+        *height = *width;
+        *width = temp;
+        /*exchange the value of height and width*/
 	}
 
     printf("Result_rotate height : %d, width : %d :\n", *height, *width);
@@ -320,13 +366,15 @@ void flip(int height, int width, int flag, char **img){
 				img[i][j] = temp_img[height - 1 - i][j];
 	}
     /*flip upside down*/
-	else if(flag == 1){
+	
+    else if(flag == 1){
 		for(i = 0; i < height; i++)
 			for(j = 0; j < width; j++)
 				img[i][j] = temp_img[i][width - 1 - j];
 	}
     /*flip left to right*/
-	else printf("Error\n");
+	
+    else printf("Error\n");
     /*case error*/
 
 	for(i = 0; i < height; i++)
@@ -341,14 +389,18 @@ char *copy(int x1, int y1, int c_h, int c_w, int height, int width, char **img){
     
     if(0 <= x1 && x1 < width && 0 <= y1 && y1 < height) flag = 1;
 	else flag = 0;
+    /*if the value of x1 or y1 is not in the right range, set flag = 0*/
 
     if(c_h <= 0 || c_w <= 0 || c_h > 4096 || c_w > 4096)
         flag = 0;
-    
+    /*if the selection of area which will be copied excess the appropriate
+     * range, set flag = 0*/
+
     if(flag == 0){
         printf("Error\n");
         return NULL;
     }
+    /*if flag is 0, the cases are Error so print error and end the function*/
 
     else if(flag == 1){
         h = y1 + c_h;
@@ -358,8 +410,12 @@ char *copy(int x1, int y1, int c_h, int c_w, int height, int width, char **img){
             h = height;
         if(w > width)
             w = width;
+        /*check the area which will be copied.
+         * limit the range which will be copied to length of height and width*/
 
         temp = (char*)malloc(((h * (w + 1)) + 1) * sizeof(char));
+        /*the temp will contain \n in the place where it seperates the next
+         * line and \0 in the end of this array*/
 
         for(i = y1; i < h; i++){
             for(j = x1; j < w; j++){
@@ -377,15 +433,20 @@ char *copy(int x1, int y1, int c_h, int c_w, int height, int width, char **img){
 void paste(int x2, int y2, int height, int width, char **img, char *temp){
     int i, j, t = 0, flag = 1;
 
-    if(temp == NULL) return;//if temp is NULL end the query4
+    if(temp == NULL) return;
+    /*if temp is NULL end the function*/
+
 	if (0 <= x2 && x2 < width && 0 <= y2 && y2 < height) flag = 1;
 	else flag = 0;
+    /* if the position of pixel which will be pasted is not in the range of
+     * height and width, flag = 0*/
 
 	if (flag == 0) {
 		printf("Error\n");
 		free(temp);
 		return;
-	}//position of x2 of y2 is out of range
+	}
+    /*position of x2 of y2 is out of range so print error and end the function*/
 	
     else if (flag == 1) {
 		for (i = y2; i < height; i++) {
@@ -405,6 +466,9 @@ void paste(int x2, int y2, int height, int width, char **img, char *temp){
 		}
 		free(temp);
 	}
+    /*if the position is appropriate, paste the copied img.
+     * if the copied img is larger than the area which will be pasted, ignore
+     * the pixels that excess the range*/
 }
 
 void fill(int y, int x, char color, char **img, int height, int width, int *count){
@@ -415,18 +479,22 @@ void fill(int y, int x, char color, char **img, int height, int width, int *coun
         flag = 1;
     }
     else flag = 0;
+    /*if the position of x or y is out of range set flag = 0*/
 
     if(flag == 0){
         printf("Error\n");
         return;
     }
+    /*if flage is 0 print error and end the function*/
 
     if(color == img[y][x]) return;
-    
+    /*if the color is same with the img which will be changed, end the function*/
+
     if(flag == 1){
         origin = img[y][x];
         img[y][x] = color;
         (*count)++;
+        /*counts the number of pixels that have been changed to new color*/
 
         if(x != width - 1){
             if(origin == img[y][x + 1])
@@ -448,4 +516,6 @@ void fill(int y, int x, char color, char **img, int height, int width, int *coun
                 fill(y, x - 1, color, img, height, width, count);
         }
     }
+    /*if the pixel left, right, up or down has the same color with img[x][y],
+     * change the img to the designated color*/
 }
